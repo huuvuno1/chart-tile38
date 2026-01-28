@@ -25,7 +25,21 @@ spec:
       initContainers:
         - name: ping-leader
           image: busybox
-          command: ["wget", "{{ template "tile38.fullname" .}}-leader:{{.Values.service.port}}/ping"]
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for leader to be ready..."
+              for i in $(seq 1 60); do
+                if nc -z -w 2 {{ template "tile38.fullname" .}}-leader {{.Values.service.port}} 2>/dev/null; then
+                  echo "Leader is ready!"
+                  exit 0
+                fi
+                echo "Attempt $i/60: Leader not ready yet, retrying in 2 seconds..."
+                sleep 2
+              done
+              echo "Failed to reach leader after 120 seconds"
+              exit 1
         - name: load-config
           image: busybox
           command: ["cp", "/config/config", "/data/config"]
@@ -47,6 +61,21 @@ spec:
             - name: data
               mountPath: "{{ .Values.follower.persistentVolume.mountPath }}"
               subPath: "{{ .Values.follower.persistentVolume.subPath }}"
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
           resources:
 {{ toYaml .Values.follower.resources | indent 12 }}
     {{- with .Values.follower.nodeSelector }}

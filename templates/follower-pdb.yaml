@@ -1,0 +1,19 @@
+{{- if gt (int .Values.follower.replicaCount) 1 }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ template "tile38.fullname" . }}-follower-pdb
+  labels:
+    app: {{ template "tile38.name" . }}
+    chart: {{ template "tile38.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    role: follower
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: {{ template "tile38.name" . }}
+      release: {{ .Release.Name }}
+      role: follower
+{{- end }}

@@ -4,7 +4,7 @@
 
 image:
   repository: tile38/tile38
-  tag: 1.12.3
+  tag: 1.37.0  # Updated to latest stable version
   pullPolicy: IfNotPresent
 
 service:
@@ -13,7 +13,13 @@ service:
 
 leader:
   replicaCount: 1
-  resources: {}
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
   nodeSelector: {}
   tolerations: []
   affinity: {}
@@ -30,7 +36,13 @@ leader:
 
 follower:
   replicaCount: 1
-  resources: {}
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
   nodeSelector: {}
   tolerations: []
   affinity: {}
